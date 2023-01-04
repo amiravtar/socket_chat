@@ -1,23 +1,26 @@
 import socket
 from colorama import Fore
 import threading
+import pathlib
 import os
+
+BASEDIR = pathlib.Path(__file__).parent
 
 PORT = 9091  # server port
 HOST = "localhost"  # server id
 SEP = "<&sep&>"  # seperator for seperating data in a single send
 BUFFER_SIZE = 1024
-DOWNLOAD_FOLDER = "downloads/"
+DOWNLOAD_FOLDER = BASEDIR / "downloads"
 
 
-# creat folder if not exist 
-if not os.path.exists(DOWNLOAD_FOLDER):
-    os.mkdir(DOWNLOAD_FOLDER)
+# creat folder if not exist
+if not DOWNLOAD_FOLDER.exists():
+    DOWNLOAD_FOLDER.mkdir()
 
 
 def resive_msg(soc: socket):
     while True:
-        #get msg from server and process it
+        # get msg from server and process it
         msg = soc.recv(BUFFER_SIZE)
         if not msg:
             soc.close()
@@ -42,7 +45,7 @@ def resive_msg(soc: socket):
             # recive file from client
             file_name = msg[1]
             file_size = int(msg[2])
-            with open(DOWNLOAD_FOLDER + file_name, "wb") as file:
+            with open(DOWNLOAD_FOLDER / file_name, "wb") as file:
                 current_size = 0
                 while current_size < file_size:
                     msg = soc.recv(BUFFER_SIZE)

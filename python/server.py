@@ -1,16 +1,18 @@
 import socket
 import threading
+import pathlib
 import os
+
+BASEDIR = pathlib.Path(__file__).parent
 
 PORT = 9091
 HOST = "localhost"
 SEP = "<&sep&>"  # seperator for seperating data in a single send
-UPLOAD_FOLDER = "uploads/"
+UPLOAD_FOLDER = BASEDIR / "uploads"
 BUFFER_SIZE = 1024
-
-# creat folder if not exist 
-if not os.path.exists(UPLOAD_FOLDER):
-    os.mkdir(UPLOAD_FOLDER)
+# creat folder if not exist
+if not UPLOAD_FOLDER.exists():
+    UPLOAD_FOLDER.mkdir()
 clients = []  # lsit of clients sockets
 threads = []  # list of threads
 
@@ -34,7 +36,7 @@ def handl_client(soc: socket, nick: str):
             # recivefile from client
             file_name = msg.split(SEP)[1]
             file_size = int(msg.split(SEP)[2])
-            with open(UPLOAD_FOLDER + f"{nick}_{file_name}", "wb") as file:
+            with open(UPLOAD_FOLDER / f"{nick}_{file_name}", "wb") as file:
                 current_size = 0
                 while current_size < file_size:
                     msg = soc.recv(BUFFER_SIZE)
@@ -45,10 +47,10 @@ def handl_client(soc: socket, nick: str):
         elif msg.split(SEP)[0] == "REQUESTFILE":
             # send file to client from server
             file_name = msg.split(SEP)[1]
-            if os.path.exists(UPLOAD_FOLDER + file_name):
-                file_size = os.path.getsize(UPLOAD_FOLDER + file_name)
+            if os.path.exists(UPLOAD_FOLDER / file_name):
+                file_size = os.path.getsize(UPLOAD_FOLDER / file_name)
                 soc.send(f"SENDINGFILE{SEP}{file_name}{SEP}{file_size}".encode("utf-8"))
-                with open(UPLOAD_FOLDER + file_name, "rb") as file:
+                with open(UPLOAD_FOLDER / file_name, "rb") as file:
                     line = file.read(BUFFER_SIZE)
                     while line:
                         soc.send(line)
